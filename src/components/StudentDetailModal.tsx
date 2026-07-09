@@ -4,7 +4,7 @@ import type { FormData } from '../App'
 
 interface StudentDetailModalProps {
   visible: boolean
-  student: (FormData & { id: number; pagoValidado: string; estadoRegistro: string }) | null
+  student: (Omit<FormData, 'pagoValidado'> & { id: number; pagoValidado: string; estadoRegistro: string }) | null
   onClose: () => void
 }
 
@@ -240,11 +240,11 @@ export default function StudentDetailModal({ visible, student, onClose }: Studen
                     <div className="flex items-center gap-2 ml-4">
                       {doc.uploaded ? (
                         <>
-                          <button className="p-2 rounded-lg hover:bg-green-200 transition text-green-700">
-                            <Eye size={18} title="Ver documento" />
+                          <button className="p-2 rounded-lg hover:bg-green-200 transition text-green-700" aria-label="Ver documento">
+                            <Eye size={18} />
                           </button>
-                          <button className="p-2 rounded-lg hover:bg-green-200 transition text-green-700">
-                            <Download size={18} title="Descargar documento" />
+                          <button className="p-2 rounded-lg hover:bg-green-200 transition text-green-700" aria-label="Descargar documento">
+                            <Download size={18} />
                           </button>
                         </>
                       ) : (

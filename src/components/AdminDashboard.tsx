@@ -10,7 +10,11 @@ interface AdminDashboardProps {
 }
 
 // Tipo combinado para el modal
-type StudentWithDetails = FormData & { id: number; pagoValidado: string; estadoRegistro: string }
+type StudentWithDetails = Omit<FormData, 'pagoValidado'> & {
+  id: number
+  pagoValidado: string
+  estadoRegistro: string
+}
 
 export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [selectedStudent, setSelectedStudent] = useState<StudentWithDetails | null>(null)
@@ -133,6 +137,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       proceso: '2026-1 – PROCESO DE ADMISIÓN 2026-1 ORDINARIO',
       modalidad: 'ADMISIÓN ORDINARIA',
       estadoCivil: 'Soltero',
+      educacionExtranjeroEsp: '',
+      medioDifusionEspecifico: '',
       pagoValidado: 'Sí',
       estadoRegistro: 'Completo'
     },
@@ -192,6 +198,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       proceso: '2026-1 – PROCESO DE ADMISIÓN 2026-1 ORDINARIO',
       modalidad: 'ADMISIÓN ORDINARIA',
       estadoCivil: 'Soltera',
+      educacionExtranjeroEsp: '',
+      medioDifusionEspecifico: '',
       pagoValidado: 'Sí',
       estadoRegistro: 'Completo'
     },

@@ -248,19 +248,19 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             <div className="grid gap-4 grid-cols-3">
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Departamento *
-                <select onChange={(e) => onChange('departamentoActual', e.target.value)} className={inputClasses}>
+                <select value={form.departamentoDomicilio || ''} onChange={(e) => onChange('departamentoDomicilio', e.target.value)} className={inputClasses}>
                   <option value="">Seleccionar</option>
                 </select>
               </label>
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Provincia *
-                <select onChange={(e) => onChange('provinciaActual', e.target.value)} className={inputClasses}>
+                <select value={form.provinciaDomicilio || ''} onChange={(e) => onChange('provinciaDomicilio', e.target.value)} className={inputClasses}>
                   <option value="">Seleccionar</option>
                 </select>
               </label>
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Distrito *
-                <select onChange={(e) => onChange('distritoActual', e.target.value)} className={inputClasses}>
+                <select value={form.distritoDomicilio || ''} onChange={(e) => onChange('distritoDomicilio', e.target.value)} className={inputClasses}>
                   <option value="">Seleccionar</option>
                 </select>
               </label>
@@ -268,8 +268,8 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             <label className="block space-y-2 text-sm font-medium text-slate-700">
               Dirección exacta *
               <input
-                value={form.direccionActual || ''}
-                onChange={(e) => onChange('direccionActual', e.target.value)}
+                value={form.direccion || ''}
+                onChange={(e) => onChange('direccion', e.target.value)}
                 placeholder="Av / Calle / Nro"
                 className={inputClasses}
               />
@@ -321,15 +321,15 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
           <label className="flex items-center gap-3 text-sm font-medium text-slate-700 cursor-pointer">
             <input
               type="checkbox"
-              checked={!!form.trabajaActualmente}
-              onChange={(e) => onChange('trabajaActualmente', e.target.checked)}
+              checked={!!form.trabaja}
+              onChange={(e) => onChange('trabaja', e.target.checked)}
               className="w-5 h-5 rounded text-sky-600 focus:ring-sky-500 cursor-pointer"
             />
             ¿Se encuentra trabajando actualmente?
           </label>
         </div>
-        
-        {form.trabajaActualmente && (
+
+        {form.trabaja && (
           <div className="grid gap-4 md:grid-cols-3 animate-in fade-in slide-in-from-top-2">
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Ocupación / Cargo
@@ -355,8 +355,8 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Institución o Empresa
               <input
-                value={form.empresa || ''}
-                onChange={(e) => onChange('empresa', e.target.value)}
+                value={form.institucionEmpresa || ''}
+                onChange={(e) => onChange('institucionEmpresa', e.target.value)}
                 placeholder="Nombre de la empresa"
                 className={inputClasses}
               />
@@ -408,7 +408,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Centro Laboral
-              <input onChange={(e) => onChange('familiarCentroLaboral', e.target.value)} placeholder="Empresa" className={inputClasses} />
+              <input value={form.familiarCentro || ''} onChange={(e) => onChange('familiarCentro', e.target.value)} placeholder="Empresa" className={inputClasses} />
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Correo electrónico
@@ -431,7 +431,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               ))}
             </div>
             {form.tipoEducacion === 'Extranjero' && (
-              <input className={`${inputClasses} mt-2`} placeholder="Especificar país/sistema" onChange={(e) => onChange('educacionExtranjeroEsp', e.target.value)} />
+              <input className={`${inputClasses} mt-2`} placeholder="Especificar país/sistema" value={form.educacionExtranjeroEsp || ''} onChange={(e) => onChange('educacionExtranjeroEsp', e.target.value)} />
             )}
           </div>
 
@@ -447,21 +447,32 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
           <div className="grid gap-4 grid-cols-2">
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Departamento
-              <select onChange={(e) => onChange('colegioDep', e.target.value)} className={inputClasses}><option>Seleccionar</option></select>
+              <select value={form.departamentoEstudio || ''} onChange={(e) => onChange('departamentoEstudio', e.target.value)} className={inputClasses}>
+                <option>Seleccionar</option>
+              </select>
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Provincia
-              <select onChange={(e) => onChange('colegioProv', e.target.value)} className={inputClasses}><option>Seleccionar</option></select>
+              <select value={form.provinciaEstudio || ''} onChange={(e) => onChange('provinciaEstudio', e.target.value)} className={inputClasses}>
+                <option>Seleccionar</option>
+              </select>
             </label>
             <label className="col-span-2 space-y-2 text-sm font-medium text-slate-700">
               Institución Educativa *
-              <select onChange={(e) => onChange('colegio', e.target.value)} className={inputClasses}><option>Seleccione un colegio</option></select>
+              <select value={form.institucionEducativa || ''} onChange={(e) => onChange('institucionEducativa', e.target.value)} className={inputClasses}>
+                <option>Seleccione un colegio</option>
+              </select>
             </label>
           </div>
-          
           <div className="grid gap-4 grid-cols-2">
-            <label className="space-y-2 text-sm font-medium text-slate-700">Año Inicio <input type="number" placeholder="Ej. 2018" className={inputClasses} /></label>
-            <label className="space-y-2 text-sm font-medium text-slate-700">Año Fin <input type="number" placeholder="Ej. 2023" className={inputClasses} /></label>
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              Año Inicio
+              <input type="number" placeholder="Ej. 2018" className={inputClasses} />
+            </label>
+            <label className="space-y-2 text-sm font-medium text-slate-700">
+              Año Fin
+              <input type="number" placeholder="Ej. 2023" className={inputClasses} />
+            </label>
           </div>
         </div>
 
@@ -477,7 +488,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
                   ))}
                 </div>
                 {form.discapacidad === 'Sí' && (
-                  <input className={`${inputClasses} mt-2`} placeholder="Especifique su discapacidad" onChange={(e) => onChange('discapacidadEspecifica', e.target.value)} />
+                  <input className={`${inputClasses} mt-2`} placeholder="Especifique su discapacidad" value={form.discapacidadDetalle || ''} onChange={(e) => onChange('discapacidadDetalle', e.target.value)} />
                 )}
               </div>
               <label className="block space-y-2 text-sm font-medium text-slate-700">
@@ -503,7 +514,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
                   ))}
                 </div>
                 {form.medioDifusion === 'Otro' && (
-                  <input className={`${inputClasses} mt-2`} placeholder="Especifique el medio" onChange={(e) => onChange('medioDifusionEspecifico', e.target.value)} />
+                  <input className={`${inputClasses} mt-2`} placeholder="Especifique el medio" value={form.medioDifusionEspecifico || ''} onChange={(e) => onChange('medioDifusionEspecifico', e.target.value)} />
                 )}
               </div>
               <label className="block space-y-2 text-sm font-medium text-slate-700">Área Académica <select className={inputClasses}><option>Seleccionar</option></select></label>

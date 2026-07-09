@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react'
+import { jsPDF } from 'jspdf'
 import RegistrationForm from './components/RegistrationForm'
 import ApplicationForm from './components/ApplicationForm'
 import PaymentModal from './components/PaymentModal'
@@ -57,6 +58,8 @@ export type FormData = {
   declaracionAntecedentes: string
   declaracionVeracidad: string
   aceptaTerminos: boolean
+  educacionExtranjeroEsp: string
+  medioDifusionEspecifico: string
   proceso: string
   modalidad: string
   estadoCivil: string
@@ -115,6 +118,7 @@ const initialForm: FormData = {
   discapacidadDetalle: '',
   preparacionUniversitaria: '',
   medioDifusion: 'Internet',
+  medioDifusionEspecifico: '',
   areaAcademica: '',
   escuelaProfesional: '',
   programaAcademico: '',
@@ -124,6 +128,7 @@ const initialForm: FormData = {
   declaracionAntecedentes: '',
   declaracionVeracidad: '',
   aceptaTerminos: false,
+  educacionExtranjeroEsp: '',
   proceso: '2026-1 – PROCESO DE ADMISIÓN 2026-1 ORDINARIO',
   modalidad: 'ADMISIÓN ORDINARIA',
   estadoCivil: 'Soltero',
@@ -208,6 +213,60 @@ function App() {
   const finishRegistration = () => {
     if (!form.aceptaTerminos) return
     setStep('success')
+  }
+
+  const downloadDeclarationPdf = () => {
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' })
+    const left = 40
+    doc.setFontSize(18)
+    doc.text('UNIVERSIDAD NACIONAL SAN LUIS GONZAGA DE ICA', left, 56)
+    doc.setFontSize(12)
+    doc.text('Carné de Postulante - Declaración Jurada de Veracidad de Información', left, 78)
+    doc.setDrawColor(0)
+    doc.setLineWidth(0.5)
+    doc.line(left, 90, 560, 90)
+
+    doc.setFontSize(11)
+    doc.text(`CÓDIGO DEL POSTULANTE: ${form.nroDocumento}`, left, 120)
+    doc.text(`APELLIDO PATERNO: ${form.apellidoPaterno}`, left, 138)
+    doc.text(`APELLIDO MATERNO: ${form.apellidoMaterno}`, left, 156)
+    doc.text(`NOMBRES: ${form.nombres}`, left, 174)
+    doc.text(`MODALIDAD: ${form.modalidad}`, left, 192)
+    doc.text(`CARRERA PROFESIONAL: ${form.escuelaProfesional || 'No definida'}`, left, 210)
+    doc.text(`FECHA DE EXAMEN: ________________________`, left, 228)
+
+    doc.text('DECLARACIÓN JURADA', left, 262)
+    doc.setFontSize(10)
+    const lines = [
+      'La información consignada al momento de inscribirme es verdadera y de mi entera responsabilidad.',
+      'Conozco y acepto todas las disposiciones del Reglamento de Admisión, al cual me someto.',
+      'En caso de alcanzar una vacante, me comprometo a cumplir con lo dispuesto en el Reglamento de Admisión.',
+    ]
+    lines.forEach((line, index) => doc.text(line, left, 282 + index * 16))
+
+    doc.setFontSize(11)
+    doc.text('DÍA DEL EXAMEN', left, 340)
+    const examNotes = [
+      'Presentarse con este carné en el local que le corresponda rendir su Examen de Admisión.',
+      'Portar el DNI original. Los extranjeros presentarán su pasaporte o carné de extranjería.',
+      'La firma e impresión dactilar se realizará en el aula asignada.',
+      'Deberá traer lápiz, borrador y tajador.',
+    ]
+    examNotes.forEach((line, index) => doc.text(`• ${line}`, left, 358 + index * 14))
+
+    doc.setLineWidth(0.5)
+    doc.line(left, 470, 250, 470)
+    doc.text('FIRMA DEL POSTULANTE', left, 486)
+    doc.line(310, 470, 560, 470)
+    doc.text('FIRMA DEL DOCENTE', 310, 486)
+
+    doc.setFontSize(10)
+    doc.text('FACULTAD', left + 20, 536)
+    doc.text('AULA', left + 260, 536)
+    doc.rect(left + 20, 520, 40, 24)
+    doc.rect(left + 100, 520, 40, 24)
+
+    doc.save('declaracion-jurada.pdf')
   }
 
   return (
@@ -303,13 +362,22 @@ function App() {
             <p className="mt-4 text-sm leading-7 text-slate-600">
               El postulante debe acercarse a la Oficina de la Comisión Ejecutiva Central de Admisión (CECA), ubicada en Calle Las Palmeras 187 - Urb. San José, Ica, para finalizar su inscripción con la toma de foto y huella dactilar.
             </p>
-            <button
-              type="button"
-              onClick={() => setStep('registro')}
-              className="mt-8 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
-            >
-              Aceptar
-            </button>
+            <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={downloadDeclarationPdf}
+                className="inline-flex items-center justify-center rounded-2xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              >
+                Descargar declaración jurada
+              </button>
+              <button
+                type="button"
+                onClick={() => setStep('registro')}
+                className="inline-flex items-center justify-center rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+              >
+                Aceptar
+              </button>
+            </div>
           </div>
         )}
       </div>
