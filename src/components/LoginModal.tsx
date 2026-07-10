@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Lock, Mail, Eye, EyeOff } from 'lucide-react'
+import logoUnica from '../assets/logo-unica.png'
 
 interface LoginModalProps {
   visible: boolean
@@ -28,9 +29,9 @@ export default function LoginModal({ visible, onClose, onLogin, isLoading = fals
         {/* Logo */}
         <div className="mb-8 flex justify-center">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 shadow-md ring-2 ring-blue-200">
-            <img 
-              src="https://www.unica.edu.pe/transparencia/img/unica.png" 
-              alt="Logo UNICA" 
+            <img
+              src={logoUnica}
+              alt="Logo UNICA"
               className="h-full w-full object-contain p-1"
             />
           </div>

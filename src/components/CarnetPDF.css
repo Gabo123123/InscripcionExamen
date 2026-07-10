@@ -1,0 +1,289 @@
+.carnet-pdf-container {
+  /* Usaremos dimensiones fijas para A4 landscape (297mm x 210mm a 96dpi aprox 1122x793px) */
+  width: 1122px;
+  height: 793px;
+  background: white;
+  padding: 37px; /* ~10mm */
+  box-sizing: border-box;
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  color: #1f2937;
+}
+
+.carnet-pdf-portrait {
+  /* Dimensiones fijas para A4 portrait (210mm x 297mm) */
+  width: 793px;
+  height: 1122px;
+  background: white;
+  padding: 50px; /* Un poco más de margen para hoja vertical */
+  box-sizing: border-box;
+  font-family: 'DejaVu Sans', Arial, sans-serif;
+  color: #1f2937;
+}
+
+.carnet-pagina {
+  display: flex;
+  gap: 22px; /* ~6mm */
+  width: 100%;
+  height: 100%;
+}
+
+.carnet-tarjeta {
+  flex: 1;
+  border: 1.5px solid #9ca3af;
+  border-radius: 4px;
+  padding: 15px 19px; /* ~4mm 5mm */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.carnet-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #d1d5db;
+  padding-bottom: 8px; /* ~2mm */
+  margin-bottom: 8px;
+}
+
+.carnet-logo-uni {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* ~2mm */
+}
+
+.carnet-logo-circulo {
+  width: 34px; /* ~9mm */
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fbbf24, #b45309);
+  flex-shrink: 0;
+}
+
+.carnet-nombre-uni .linea1 {
+  font-size: 10px; /* ~7.5pt */
+  color: #374151;
+}
+
+.carnet-nombre-uni .linea2 {
+  font-size: 13.5px; /* ~10pt */
+  font-weight: 700;
+  color: #7f1d1d;
+  letter-spacing: 0.3px;
+}
+
+.carnet-titulo-direccion {
+  font-size: 16px; /* ~12pt */
+  font-weight: 700;
+  text-align: center;
+  flex: 1;
+}
+
+.carnet-logo-caja {
+  width: 60px; /* ~16mm */
+  height: 34px; /* ~9mm */
+  background: #1e3a8a;
+  color: #fff;
+  font-size: 8px; /* ~6pt */
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  line-height: 1.1;
+}
+
+.carnet-subtitulo {
+  text-align: center;
+  font-size: 11.5px; /* ~8.5pt */
+  font-weight: 700;
+  margin-bottom: 11px; /* ~3mm */
+}
+
+.carnet-cuerpo {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px; /* ~2mm */
+}
+
+.carnet-datos {
+  flex: 1;
+}
+
+.carnet-datos .fila {
+  font-size: 10.5px; /* ~7.8pt */
+  margin-bottom: 6px; /* ~1.6mm */
+}
+
+.carnet-etiqueta {
+  color: #4b5563;
+}
+
+.carnet-valor {
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.carnet-foto-bloque {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px; /* ~1.5mm */
+}
+
+.carnet-foto {
+  width: 98px; /* ~26mm */
+  height: 121px; /* ~32mm */
+  object-fit: cover;
+  border: 1px solid #9ca3af;
+}
+
+.carnet-lados-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.carnet-lado-vertical-vacio {
+  border: 1px solid #d1d5db;
+  width: 18px;
+  height: 40px;
+  flex-shrink: 0;
+}
+
+.carnet-lado-vertical-outer {
+  position: relative;
+  width: 18px;
+  height: 140px;
+  border: 1px solid #d1d5db;
+  overflow: hidden;
+}
+
+.carnet-lado-vertical-inner {
+  position: absolute;
+  width: 140px;
+  height: 18px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #4b5563;
+  white-space: nowrap;
+}
+
+.carnet-seccion {
+  margin-bottom: 8px; /* ~2mm */
+}
+
+.carnet-seccion-titulo {
+  font-size: 11px; /* ~8pt */
+  font-weight: 700;
+  margin-bottom: 4px; /* ~1mm */
+}
+
+.carnet-seccion ul {
+  margin: 0;
+  padding-left: 15px; /* ~4mm */
+}
+
+.carnet-seccion li {
+  font-size: 9px; /* ~6.6pt */
+  line-height: 1.35;
+  color: #374151;
+}
+
+.carnet-fila-inferior {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: auto;
+}
+
+.carnet-col-izquierda {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px; /* ~1mm */
+}
+
+.carnet-no-tocar {
+  font-size: 8px; /* ~6pt */
+  color: #6b7280;
+}
+
+.carnet-col-firmas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 15px; /* ~4mm */
+}
+
+.carnet-linea-firma {
+  border-top: 1px solid #9ca3af;
+  width: 100%;
+  text-align: center;
+  font-size: 9px; /* ~6.6pt */
+  padding-top: 4px; /* ~1mm */
+  margin-bottom: 25px; /* ~8mm */
+}
+
+.carnet-col-huellas {
+  display: flex;
+  flex-direction: row;
+  gap: 8px; /* ~2mm */
+}
+
+.carnet-caja-huella {
+  width: 60px;
+  height: 75px;
+  border: 1px solid #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  overflow: hidden;
+}
+
+.carnet-txt-huella {
+  font-size: 8px; /* ~6pt */
+  color: #9ca3af;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.carnet-fila-final {
+  display: flex;
+  justify-content: center;
+  gap: 45px; /* ~12mm */
+  margin-top: 11px; /* ~3mm */
+}
+
+.carnet-grupo-final {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.carnet-cajas-final {
+  display: flex;
+  gap: 2px; /* ~0.5mm */
+}
+
+.carnet-celda {
+  width: 22px; /* ~6mm */
+  height: 22px;
+  border: 1px solid #9ca3af;
+}
+
+.carnet-etiqueta-final {
+  font-size: 9px; /* ~6.6pt */
+  margin-top: 4px; /* ~1mm */
+  letter-spacing: 0.5px;
+}

@@ -1,4 +1,11 @@
+import { useState, useEffect } from 'react'
+
+import { toast } from 'react-hot-toast'
 import type { FormData } from '../App'
+import { countries, peruData } from '../data/locations'
+import { areas, areaCareers } from '../data/careers'
+import PhotoUpload from './PhotoUpload'
+import modalImg from '../assets/modal.png'
 
 interface ApplicationFormProps {
   form: FormData
@@ -6,12 +13,13 @@ interface ApplicationFormProps {
   onChange: (key: keyof FormData, value: string | boolean) => void
   onBack: () => void
   onSubmit: () => void
+  isSubmitting?: boolean
 }
 
 const sexoOptions = ['No especifica', 'Masculino', 'Femenino']
 const familiarOptions = ['Ninguno', 'Madre', 'Padre', 'Otro']
-const tipoEducacionOptions = ['Público', 'Privado', 'Extranjero']
-const estudiosConcluidosOptions = ['Sí', 'No', 'cursando 5° año', 'Otros casos']
+const tipoEducacionOptions = ['Nacional', 'Privado', 'Extranjero']
+const estudiosConcluidosOptions = ['Sí', 'cursando 5° año']
 const discapacidadOptions = ['Ninguna', 'Sí']
 const medioDifusionOptions = ['Internet', 'Redes Sociales', 'Familia y/o amigos', 'Otro']
 
@@ -19,12 +27,110 @@ const medioDifusionOptions = ['Internet', 'Redes Sociales', 'Familia y/o amigos'
 const inputClasses = "w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-200 transition-colors"
 const fileInputClasses = "block w-full text-sm text-slate-500 file:mr-4 file:py-3 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer"
 
-export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit }: ApplicationFormProps) {
+export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit, isSubmitting = false }: ApplicationFormProps) {
+  
+  // Helpers para Ubigeo
+  const departamentos = Object.keys(peruData).sort()
+  
+  const provinciasNacimiento = form.departamentoNacimiento && peruData[form.departamentoNacimiento] 
+    ? Object.keys(peruData[form.departamentoNacimiento]).sort() 
+    : []
+  const distritosNacimiento = form.departamentoNacimiento && form.provinciaNacimiento && peruData[form.departamentoNacimiento]?.[form.provinciaNacimiento]
+    ? peruData[form.departamentoNacimiento][form.provinciaNacimiento].sort()
+    : []
+
+  const provinciasDomicilio = form.departamentoDomicilio && peruData[form.departamentoDomicilio]
+    ? Object.keys(peruData[form.departamentoDomicilio]).sort()
+    : []
+  const distritosDomicilio = form.departamentoDomicilio && form.provinciaDomicilio && peruData[form.departamentoDomicilio]?.[form.provinciaDomicilio]
+    ? peruData[form.departamentoDomicilio][form.provinciaDomicilio].sort()
+    : []
+
+  const provinciasEstudio = form.departamentoEstudio && peruData[form.departamentoEstudio]
+    ? Object.keys(peruData[form.departamentoEstudio]).sort()
+    : []
+
+  // Modal DNI Amarillo
+  const [showMinorModal, setShowMinorModal] = useState(false)
+  const [hasSeenMinorModal, setHasSeenMinorModal] = useState(false)
+
+  useEffect(() => {
+    if (edad && parseInt(edad) < 18 && !hasSeenMinorModal) {
+      setShowMinorModal(true)
+      setHasSeenMinorModal(true)
+    }
+  }, [edad, hasSeenMinorModal])
+
+  const handleLocalSubmit = () => {
+    const requiredFields = [
+      { key: 'foto', label: 'Fotografía del Postulante', id: 'field-foto' },
+      { key: 'nombres', label: 'Nombres', id: 'field-nombres' },
+      { key: 'apellidoPaterno', label: 'Apellido Paterno', id: 'field-apellidoPaterno' },
+      { key: 'tipoDocumento', label: 'Tipo de documento', id: 'field-tipoDocumento' },
+      { key: 'nroDocumento', label: 'Nro. documento', id: 'field-nroDocumento' },
+      { key: 'fechaNacimiento', label: 'Fecha de nacimiento', id: 'field-fechaNacimiento' },
+      { key: 'departamentoDomicilio', label: 'Departamento (Domicilio)', id: 'field-departamentoDomicilio' },
+      { key: 'areaAcademica', label: 'Área Académica', id: 'field-areaAcademica' },
+      { key: 'escuelaProfesional', label: 'Carrera profesional a Postular', id: 'field-escuelaProfesional' }
+    ]
+
+    const missingField = requiredFields.find(f => !form[f.key as keyof FormData])
+    if (missingField) {
+      toast.error(`Información incompleta: Por favor registre su ${missingField.label}`, { 
+        position: 'top-center',
+        duration: 4000
+      })
+      
+      const el = document.getElementById(missingField.id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.classList.add('ring-2', 'ring-red-500', 'ring-offset-2', 'transition-all', 'duration-300')
+        setTimeout(() => el.classList.remove('ring-2', 'ring-red-500', 'ring-offset-2'), 3500)
+      }
+      return
+    }
+    
+    onSubmit()
+  }
+
+  // Helper para cambios en cascada
+  const handleLocationChange = (
+    field: 'procedencia' | 'departamentoNacimiento' | 'provinciaNacimiento' | 'departamentoDomicilio' | 'provinciaDomicilio' | 'departamentoEstudio' | 'provinciaEstudio', 
+    value: string
+  ) => {
+    onChange(field, value)
+    
+    // Resetear dependencias
+    if (field === 'procedencia') {
+      onChange('paisNacimiento', value === 'Perú' ? 'Perú' : '')
+    } else if (field === 'departamentoNacimiento') {
+      onChange('provinciaNacimiento', '')
+      onChange('distritoNacimiento', '')
+    } else if (field === 'provinciaNacimiento') {
+      onChange('distritoNacimiento', '')
+    } else if (field === 'departamentoDomicilio') {
+      onChange('provinciaDomicilio', '')
+      onChange('distritoDomicilio', '')
+    } else if (field === 'provinciaDomicilio') {
+      onChange('distritoDomicilio', '')
+    } else if (field === 'departamentoEstudio') {
+      onChange('provinciaEstudio', '')
+    }
+  }
+
   return (
     <section className="space-y-8">
-      {/* Datos Personales */}
+      {/* Datos Personales y Fotografía */}
       <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-300/30 ring-1 ring-slate-200">
-        <div className="mb-6">
+        {/* Fotografía (Top Level) */}
+        <div className="mb-10" id="field-foto">
+          <PhotoUpload 
+            onCapture={(base64) => onChange('foto', base64)} 
+            currentImage={form.foto} 
+          />
+        </div>
+
+        <div className="mb-6 border-t border-slate-100 pt-8">
           <h2 className="text-2xl font-semibold text-slate-900">Datos Personales</h2>
         </div>
         <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -33,6 +139,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Nombres *
                 <input
+                  id="field-nombres"
                   value={form.nombres || ''}
                   onChange={(event) => onChange('nombres', event.target.value)}
                   placeholder="Nombres"
@@ -42,6 +149,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Apellido Paterno *
                 <input
+                  id="field-apellidoPaterno"
                   value={form.apellidoPaterno || ''}
                   onChange={(event) => onChange('apellidoPaterno', event.target.value)}
                   placeholder="Apellido paterno"
@@ -63,6 +171,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Tipo de documento *
                 <select
+                  id="field-tipoDocumento"
                   value={form.tipoDocumento || ''}
                   onChange={(event) => onChange('tipoDocumento', event.target.value)}
                   className={inputClasses}
@@ -76,6 +185,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Nro. documento *
                 <input
+                  id="field-nroDocumento"
                   value={form.nroDocumento || ''}
                   onChange={(event) => onChange('nroDocumento', event.target.value)}
                   placeholder="Ej. 70314759"
@@ -106,46 +216,45 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             <div className="grid gap-4 sm:grid-cols-4">
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Fecha de nacimiento *
-                <input
-                  type="date"
-                  value={form.fechaNacimiento || ''}
-                  onChange={(event) => onChange('fechaNacimiento', event.target.value)}
-                  className={inputClasses}
-                />
+                <div className="flex gap-2">
+                  <input
+                    id="field-fechaNacimiento"
+                    type="date"
+                    value={form.fechaNacimiento || ''}
+                    onChange={(event) => onChange('fechaNacimiento', event.target.value)}
+                    className={inputClasses}
+                  />
+                </div>
               </label>
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Edad
-                <input
-                  type="text"
-                  value={edad}
-                  readOnly
-                  className="w-full rounded-2xl border border-slate-300 bg-slate-100 px-4 py-3 text-sm text-slate-700 outline-none"
-                />
+                <input value={edad} readOnly className={`${inputClasses} cursor-not-allowed bg-slate-100 font-semibold`} />
               </label>
-              <label className="space-y-2 text-sm font-medium text-slate-700">
-                Estado Civil *
-                <select
-                  value={form.estadoCivil || ''}
-                  onChange={(event) => onChange('estadoCivil', event.target.value)}
-                  className={inputClasses}
-                >
-                  <option value="">Seleccionar</option>
-                  <option>Soltero</option>
-                  <option>Casado</option>
-                  <option>Divorciado</option>
-                  <option>Viudo</option>
-                </select>
-              </label>
-              <label className="space-y-2 text-sm font-medium text-slate-700">
-                N° de hijos *
-                <input
-                  type="number"
-                  min="0"
-                  value={form.numeroHijos || ''}
-                  onChange={(event) => onChange('numeroHijos', event.target.value)}
-                  className={inputClasses}
-                />
-              </label>
+              <div className="grid gap-4 md:grid-cols-2 sm:col-span-2">
+                <label className="space-y-2 text-sm font-medium text-slate-700">
+                  Estado Civil *
+                  <select
+                    value={form.estadoCivil || ''}
+                    onChange={(event) => onChange('estadoCivil', event.target.value)}
+                    className={inputClasses}
+                  >
+                    <option>Soltero</option>
+                    <option>Casado</option>
+                    <option>Viudo</option>
+                    <option>Divorciado</option>
+                  </select>
+                </label>
+                <label className="space-y-2 text-sm font-medium text-slate-700">
+                  Número de hijos
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.numeroHijos || ''}
+                    onChange={(event) => onChange('numeroHijos', event.target.value)}
+                    className={inputClasses}
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
@@ -156,7 +265,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
                 <span className="text-slate-500">👤</span>
                 <div>
                   <dt className="font-semibold text-slate-900">Postulante</dt>
-                  <dd>{form.nombres || 'Nombres'} {form.apellidoPaterno || 'Apellido'}</dd>
+                  <dd>{form.nombres || 'Nombres'} {form.apellidoPaterno || 'Apellido'} {form.apellidoMaterno || ''}</dd>
                 </div>
               </div>
               <div className="flex items-center gap-3 rounded-3xl bg-white p-4 shadow-sm">
@@ -186,7 +295,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             Procedencia *
             <select
               value={form.procedencia || ''}
-              onChange={(event) => onChange('procedencia', event.target.value)}
+              onChange={(event) => handleLocationChange('procedencia', event.target.value)}
               className={inputClasses}
             >
               <option value="">Seleccionar</option>
@@ -200,41 +309,62 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               value={form.paisNacimiento || ''}
               onChange={(event) => onChange('paisNacimiento', event.target.value)}
               className={inputClasses}
+              disabled={form.procedencia === 'Perú'}
             >
               <option value="">Seleccionar</option>
-              <option>Perú</option>
-              {/* Más opciones de países */}
+              {form.procedencia === 'Perú' ? (
+                <option>Perú</option>
+              ) : (
+                countries.map(c => <option key={c}>{c}</option>)
+              )}
             </select>
           </label>
           <label className="space-y-2 text-sm font-medium text-slate-700">
             Departamento
-            <select
-              value={form.departamentoNacimiento || ''}
-              onChange={(event) => onChange('departamentoNacimiento', event.target.value)}
-              className={inputClasses}
-            >
-              <option value="">Seleccionar</option>
-            </select>
+            {form.procedencia === 'Extranjero' ? (
+              <input value={form.departamentoNacimiento || ''} onChange={(e) => onChange('departamentoNacimiento', e.target.value)} className={inputClasses} placeholder="Ingresar departamento/estado" />
+            ) : (
+              <select
+                value={form.departamentoNacimiento || ''}
+                onChange={(event) => handleLocationChange('departamentoNacimiento', event.target.value)}
+                className={inputClasses}
+              >
+                <option value="">Seleccionar</option>
+                {departamentos.map(d => <option key={d}>{d}</option>)}
+              </select>
+            )}
           </label>
           <label className="space-y-2 text-sm font-medium text-slate-700">
             Provincia
-            <select
-              value={form.provinciaNacimiento || ''}
-              onChange={(event) => onChange('provinciaNacimiento', event.target.value)}
-              className={inputClasses}
-            >
-              <option value="">Seleccionar</option>
-            </select>
+            {form.procedencia === 'Extranjero' ? (
+              <input value={form.provinciaNacimiento || ''} onChange={(e) => onChange('provinciaNacimiento', e.target.value)} className={inputClasses} placeholder="Ingresar provincia/ciudad" />
+            ) : (
+              <select
+                value={form.provinciaNacimiento || ''}
+                onChange={(event) => handleLocationChange('provinciaNacimiento', event.target.value)}
+                className={inputClasses}
+                disabled={!form.departamentoNacimiento}
+              >
+                <option value="">Seleccionar</option>
+                {provinciasNacimiento.map(p => <option key={p}>{p}</option>)}
+              </select>
+            )}
           </label>
           <label className="space-y-2 text-sm font-medium text-slate-700">
             Distrito
-            <select
-              value={form.distritoNacimiento || ''}
-              onChange={(event) => onChange('distritoNacimiento', event.target.value)}
-              className={inputClasses}
-            >
-              <option value="">Seleccionar</option>
-            </select>
+            {form.procedencia === 'Extranjero' ? (
+              <input value={form.distritoNacimiento || ''} onChange={(e) => onChange('distritoNacimiento', e.target.value)} className={inputClasses} placeholder="Ingresar distrito" />
+            ) : (
+              <select
+                value={form.distritoNacimiento || ''}
+                onChange={(event) => onChange('distritoNacimiento', event.target.value)}
+                className={inputClasses}
+                disabled={!form.provinciaNacimiento}
+              >
+                <option value="">Seleccionar</option>
+                {distritosNacimiento.map(d => <option key={d}>{d}</option>)}
+              </select>
+            )}
           </label>
         </div>
       </div>
@@ -248,20 +378,38 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             <div className="grid gap-4 grid-cols-3">
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Departamento *
-                <select value={form.departamentoDomicilio || ''} onChange={(e) => onChange('departamentoDomicilio', e.target.value)} className={inputClasses}>
+                <select 
+                  id="field-departamentoDomicilio"
+                  value={form.departamentoDomicilio || ''} 
+                  onChange={(e) => handleLocationChange('departamentoDomicilio', e.target.value)} 
+                  className={inputClasses}
+                >
                   <option value="">Seleccionar</option>
+                  {departamentos.map(d => <option key={d}>{d}</option>)}
                 </select>
               </label>
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Provincia *
-                <select value={form.provinciaDomicilio || ''} onChange={(e) => onChange('provinciaDomicilio', e.target.value)} className={inputClasses}>
+                <select 
+                  value={form.provinciaDomicilio || ''} 
+                  onChange={(e) => handleLocationChange('provinciaDomicilio', e.target.value)} 
+                  className={inputClasses}
+                  disabled={!form.departamentoDomicilio}
+                >
                   <option value="">Seleccionar</option>
+                  {provinciasDomicilio.map(p => <option key={p}>{p}</option>)}
                 </select>
               </label>
               <label className="space-y-2 text-sm font-medium text-slate-700">
                 Distrito *
-                <select value={form.distritoDomicilio || ''} onChange={(e) => onChange('distritoDomicilio', e.target.value)} className={inputClasses}>
+                <select 
+                  value={form.distritoDomicilio || ''} 
+                  onChange={(e) => onChange('distritoDomicilio', e.target.value)} 
+                  className={inputClasses}
+                  disabled={!form.provinciaDomicilio}
+                >
                   <option value="">Seleccionar</option>
+                  {distritosDomicilio.map(d => <option key={d}>{d}</option>)}
                 </select>
               </label>
             </div>
@@ -311,6 +459,68 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               </label>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Datos de Postulación */}
+      <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-300/30 ring-1 ring-slate-200">
+        <div className="mb-6">
+          <h2 className="text-2xl font-semibold text-slate-900">Datos de Postulación</h2>
+        </div>
+        
+        <div className="grid gap-6 sm:grid-cols-2">
+          <label className="space-y-2 text-sm font-medium text-slate-700">
+            Medio de difusión *
+            <select
+              value={form.medioDifusion || ''}
+              onChange={(event) => onChange('medioDifusion', event.target.value)}
+              className={inputClasses}
+            >
+              <option value="">Seleccionar</option>
+              {medioDifusionOptions.map(m => <option key={m}>{m}</option>)}
+            </select>
+          </label>
+          <label className="space-y-2 text-sm font-medium text-slate-700">
+            Especifique Canal
+            <input
+              value={form.medioDifusionEspecifico || ''}
+              onChange={(event) => onChange('medioDifusionEspecifico', event.target.value)}
+              placeholder="Ej. Facebook, Radio XYZ, etc."
+              className={inputClasses}
+            />
+          </label>
+
+          <label className="space-y-2 text-sm font-medium text-slate-700">
+            Área Académica *
+            <select
+              id="field-areaAcademica"
+              value={form.areaAcademica || ''}
+              onChange={(event) => {
+                onChange('areaAcademica', event.target.value)
+                onChange('escuelaProfesional', '') // Reset carrera al cambiar área
+              }}
+              className={inputClasses}
+            >
+              <option value="">Seleccionar Área</option>
+              {areas.map(area => <option key={area}>{area}</option>)}
+            </select>
+          </label>
+          
+          <label className="space-y-2 text-sm font-medium text-slate-700">
+            Carrera profesional a Postular *
+            <select
+              id="field-escuelaProfesional"
+              value={form.escuelaProfesional || ''}
+              onChange={(event) => onChange('escuelaProfesional', event.target.value)}
+              className={inputClasses}
+              disabled={!form.areaAcademica}
+            >
+              <option value="">Seleccionar Carrera</option>
+              {form.areaAcademica && areaCareers[form.areaAcademica]?.map(carrera => (
+                <option key={carrera}>{carrera}</option>
+              ))}
+            </select>
+          </label>
         </div>
       </div>
 
@@ -375,9 +585,9 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
               <button
                 type="button"
                 key={option}
-                onClick={() => onChange('tipoFamiliar', option)}
+                onClick={() => onChange('familiarTipo', option)}
                 className={`rounded-full px-4 py-2 text-sm transition ${
-                  form.tipoFamiliar === option
+                  form.familiarTipo === option
                     ? 'bg-slate-900 text-white'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
@@ -388,7 +598,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
           </div>
         </div>
 
-        {form.tipoFamiliar && form.tipoFamiliar !== 'Ninguno' && (
+        {form.familiarTipo && form.familiarTipo !== 'Ninguno' && (
           <div className="grid gap-4 md:grid-cols-3">
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Nombre completo *
@@ -396,7 +606,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Relación *
-              <input onChange={(e) => onChange('familiarRelacion', e.target.value)} placeholder="Ej. Tío, Abuelo" className={inputClasses} disabled={form.tipoFamiliar === 'Madre' || form.tipoFamiliar === 'Padre'} value={form.tipoFamiliar !== 'Otro' ? form.tipoFamiliar : form.familiarRelacion || ''} />
+              <input onChange={(e) => onChange('familiarRelacion', e.target.value)} placeholder="Ej. Tío, Abuelo" className={inputClasses} disabled={form.familiarTipo === 'Madre' || form.familiarTipo === 'Padre'} value={form.familiarTipo !== 'Otro' ? form.familiarTipo : form.familiarRelacion || ''} />
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Teléfono *
@@ -447,21 +657,27 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
           <div className="grid gap-4 grid-cols-2">
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Departamento
-              <select value={form.departamentoEstudio || ''} onChange={(e) => onChange('departamentoEstudio', e.target.value)} className={inputClasses}>
-                <option>Seleccionar</option>
+              <select value={form.departamentoEstudio || ''} onChange={(e) => handleLocationChange('departamentoEstudio', e.target.value)} className={inputClasses}>
+                <option value="">Seleccionar</option>
+                {departamentos.map(d => <option key={d}>{d}</option>)}
               </select>
             </label>
             <label className="space-y-2 text-sm font-medium text-slate-700">
               Provincia
-              <select value={form.provinciaEstudio || ''} onChange={(e) => onChange('provinciaEstudio', e.target.value)} className={inputClasses}>
-                <option>Seleccionar</option>
+              <select value={form.provinciaEstudio || ''} onChange={(e) => onChange('provinciaEstudio', e.target.value)} className={inputClasses} disabled={!form.departamentoEstudio}>
+                <option value="">Seleccionar</option>
+                {provinciasEstudio.map(p => <option key={p}>{p}</option>)}
               </select>
             </label>
             <label className="col-span-2 space-y-2 text-sm font-medium text-slate-700">
               Institución Educativa *
-              <select value={form.institucionEducativa || ''} onChange={(e) => onChange('institucionEducativa', e.target.value)} className={inputClasses}>
-                <option>Seleccione un colegio</option>
-              </select>
+              <input 
+                type="text" 
+                value={form.institucionEducativa || ''} 
+                onChange={(e) => onChange('institucionEducativa', e.target.value)} 
+                className={inputClasses} 
+                placeholder="Nombre del colegio / institución" 
+              />
             </label>
           </div>
           <div className="grid gap-4 grid-cols-2">
@@ -500,26 +716,6 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
                   <option>Autopreparación</option>
                 </select>
               </label>
-            </div>
-          </div>
-
-          <div className="rounded-3xl bg-white p-8 shadow-xl shadow-slate-300/30 ring-1 ring-slate-200">
-            <h2 className="mb-4 text-xl font-semibold text-slate-900">Datos de Postulación</h2>
-            <div className="space-y-4">
-              <div className="space-y-2 text-sm font-medium text-slate-700">
-                Medio por el cual te enteraste *
-                <div className="flex flex-wrap gap-2">
-                  {medioDifusionOptions.map(opt => (
-                    <button type="button" key={opt} onClick={() => onChange('medioDifusion', opt)} className={`rounded-full px-4 py-2 text-sm transition ${form.medioDifusion === opt ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>{opt}</button>
-                  ))}
-                </div>
-                {form.medioDifusion === 'Otro' && (
-                  <input className={`${inputClasses} mt-2`} placeholder="Especifique el medio" value={form.medioDifusionEspecifico || ''} onChange={(e) => onChange('medioDifusionEspecifico', e.target.value)} />
-                )}
-              </div>
-              <label className="block space-y-2 text-sm font-medium text-slate-700">Área Académica <select className={inputClasses}><option>Seleccionar</option></select></label>
-              <label className="block space-y-2 text-sm font-medium text-slate-700">Escuela Profesional a postular <select className={inputClasses}><option>Seleccionar</option></select></label>
-              <label className="block space-y-2 text-sm font-medium text-slate-700">Programa Académico <select className={inputClasses}><option>Seleccionar</option></select></label>
             </div>
           </div>
         </div>
@@ -568,7 +764,7 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
                 type="checkbox"
                 checked={!!form.aceptaTerminos}
                 onChange={(e) => onChange('aceptaTerminos', e.target.checked)}
-                className="w-5 h-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500"
+                className="h-5 w-5 rounded border-orange-300 text-orange-600 focus:ring-orange-500"
               />
               Acepto los Términos y Condiciones
             </label>
@@ -576,23 +772,61 @@ export default function ApplicationForm({ form, edad, onChange, onBack, onSubmit
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-8 flex justify-end gap-4">
         <button
           type="button"
           onClick={onBack}
-          className="rounded-2xl bg-slate-100 px-8 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+          className="rounded-2xl border-2 border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
         >
-          Volver
+          Volver atrás
         </button>
         <button
           type="button"
-          onClick={onSubmit}
-          disabled={!form.aceptaTerminos}
-          className="inline-flex items-center gap-2 rounded-2xl bg-orange-600 px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 transition hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isSubmitting}
+          onClick={handleLocalSubmit}
+          className="inline-flex min-w-[200px] items-center justify-center gap-2 rounded-2xl bg-sky-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-sky-500/20 transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          Registrar Inscripción
+          {isSubmitting ? (
+            <>
+              <div className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              Procesando...
+            </>
+          ) : 'Registrar Inscripción'}
         </button>
       </div>
+
+      {/* Modal DNI Amarillo (Menores de edad) */}
+      {showMinorModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 px-4 backdrop-blur-sm">
+          <div className="relative w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="bg-slate-50 p-6 flex flex-col items-center">
+              
+              <div className="text-center mb-6">
+                <h2 className="text-xl font-bold text-slate-900 mb-2">COMUNICADO PARA LOS POSTULANTES CON D.N.I. AMARILLO</h2>
+              </div>
+              
+              <img 
+                src={modalImg} 
+                alt="Comunicado DNI Amarillo" 
+                className="max-h-[50vh] w-auto rounded-xl object-contain shadow-sm mb-6"
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center text-sm font-medium text-slate-700 mb-8 max-w-4xl px-4">
+                <p>LOS POSTULANTES AL EXAMEN DE ADMISIÓN 2026-1 MENORES DE EDAD CON D.N.I. AMARILLO</p>
+                <p>DEBERÁN SUBIR UNA FOTO ACTUAL</p>
+                <p>DESPUÉS DE SU PRE-INSCRIPCIÓN VIRTUAL ACERCARSE A LA OFICINA DE LA COMISIÓN EJECUTIVA CENTRAL DE ADMISIÓN (SITO CALLE LAS PALMERAS 187 URB. SAN JOSÉ) PARA CULMINAR SU INSCRIPCIÓN.</p>
+              </div>
+
+              <button
+                onClick={() => setShowMinorModal(false)}
+                className="flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+              >
+                Aceptar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

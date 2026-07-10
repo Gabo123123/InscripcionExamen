@@ -1,3 +1,8 @@
+import { useState } from 'react'
+import { HelpCircle, X } from 'lucide-react'
+import { toast } from 'react-hot-toast'
+import voucherImg from '../assets/voucher.png'
+
 interface PaymentItem {
   tipo: string
   operacion: string
@@ -13,6 +18,7 @@ interface PaymentModalProps {
   payments: PaymentItem[]
   addPayment: () => void
   paymentTotal: number
+  requiredTotal: number
   onValidatePayment: () => void
   onRemovePayment: (index: number) => void
 }
@@ -25,12 +31,35 @@ export default function PaymentModal({
   payments,
   addPayment,
   paymentTotal,
+  requiredTotal,
   onValidatePayment,
   onRemovePayment,
 }: PaymentModalProps) {
+  const [showGuide, setShowGuide] = useState(false)
+
   if (!visible) return null
 
   const pagoOptions = ['Entidad Financiera (Banco/Caja)', 'Depósito en efectivo', 'Transferencia']
+
+  const handleLocalAdd = () => {
+    if (!newPayment.tipo || !newPayment.operacion || !newPayment.monto || !newPayment.fecha) {
+      toast.error('Complete todos los campos del comprobante', { position: 'top-center' })
+      return
+    }
+    addPayment()
+  }
+
+  const handleLocalSave = () => {
+    if (paymentTotal < requiredTotal) {
+      toast.error(`Falta completar el pago correspondiente. El monto total requerido es S/. ${requiredTotal.toFixed(2)}`, { 
+        position: 'top-center',
+        duration: 4000
+      })
+      return
+    }
+    onValidatePayment()
+    onClose()
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 px-4 py-6">
@@ -38,7 +67,7 @@ export default function PaymentModal({
         <div className="mb-6 flex items-center justify-between gap-3">
           <div>
             <p className="text-sm uppercase tracking-[0.25em] text-slate-500">Datos del pago</p>
-            <h3 className="text-xl font-semibold text-slate-900">Monto base: S/. 400.00</h3>
+            <h3 className="text-xl font-semibold text-slate-900">Monto requerido: S/. {requiredTotal.toFixed(2)}</h3>
           </div>
           <button
             type="button"
@@ -63,7 +92,17 @@ export default function PaymentModal({
             </select>
           </label>
           <label className="space-y-2 text-sm font-medium text-slate-700">
-            Nro. Operación
+            <div className="flex items-center gap-2">
+              Nro. Operación
+              <button 
+                type="button" 
+                onClick={() => setShowGuide(true)}
+                className="text-slate-400 hover:text-sky-600 transition-colors"
+                title="Ver guía de voucher"
+              >
+                <HelpCircle size={16} />
+              </button>
+            </div>
             <input
               value={newPayment.operacion}
               onChange={(event) => setNewPayment({ ...newPayment, operacion: event.target.value })}
@@ -96,7 +135,7 @@ export default function PaymentModal({
         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
           <button
             type="button"
-            onClick={addPayment}
+            onClick={handleLocalAdd}
             className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-400/20 transition hover:bg-orange-600"
           >
             Agregar
@@ -148,16 +187,37 @@ export default function PaymentModal({
           </button>
           <button
             type="button"
-            onClick={() => {
-              onValidatePayment()
-              onClose()
-            }}
-            className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
+            onClick={handleLocalSave}
+            className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-700"
           >
             Guardar
           </button>
         </div>
       </div>
+
+      {/* Modal de Guía de Voucher */}
+      {showGuide && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/80 px-4 py-6 backdrop-blur-sm">
+          <div className="relative max-w-4xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+              <h3 className="text-lg font-semibold text-slate-900">Guía de Voucher</h3>
+              <button 
+                onClick={() => setShowGuide(false)}
+                className="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="bg-slate-50 p-6">
+              <img 
+                src={voucherImg} 
+                alt="Guía de comprobante de pago" 
+                className="max-h-[70vh] w-auto rounded-xl object-contain shadow-sm"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

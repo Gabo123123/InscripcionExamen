@@ -1,4 +1,5 @@
 import { LogOut } from 'lucide-react'
+import logoUnica from '../assets/logo-unica.png'
 
 interface AdminNavigationProps {
   onLogout: () => void
@@ -11,9 +12,9 @@ export default function AdminNavigation({ onLogout }: AdminNavigationProps) {
         <div className="flex items-center gap-4">
           {/* Logo */}
           <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-white shadow-md">
-            <img 
-              src="https://www.unica.edu.pe/transparencia/img/unica.png" 
-              alt="Logo UNICA" 
+            <img
+              src={logoUnica}
+              alt="Logo UNICA"
               className="h-full w-full object-contain p-1"
             />
           </div>
@@ -23,7 +24,7 @@ export default function AdminNavigation({ onLogout }: AdminNavigationProps) {
             <h1 className="text-2xl font-semibold text-white">Administrador - CECA</h1>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="rounded-full bg-white/20 px-4 py-2">
             <p className="text-sm font-medium text-white">2026-1 Ordinario</p>
